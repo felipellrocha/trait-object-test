@@ -1,33 +1,27 @@
-pub mod registry;
 pub mod erased;
-pub mod global;
 pub mod factory;
-
-use serde::{Serialize, Deserialize};
-use crate::{
-  global::Registry,
-  factory::Resource,
-};
+pub mod global;
+pub mod registry;
+/*
+use crate::{factory::Resource, global::Registry};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Dog {
-  test: u32,
+    test: u32,
 }
-impl Resource for Dog {
-}
+impl Resource for Dog {}
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Person {}
-impl Resource for Person {
-}
+impl Resource for Person {}
 
 #[derive(Debug, Serialize, Deserialize)]
 enum Cat {
-  Test1,
-  Test2(u8),
+    Test1,
+    Test2(u8),
 }
-impl Resource for Cat {
-}
+impl Resource for Cat {}
 
 /*
 #[derive(Debug, Serialize)]
@@ -40,26 +34,32 @@ struct Test {
 */
 
 fn main() {
-  let binding = Registry::get();
-  let mut registry = binding.lock().unwrap();
-  registry.register::<Dog>("Dog");
-  registry.register::<Person>("Person");
-  registry.register::<Cat>("Cat");
-  println!("registry: {:?}", &registry);
+    let binding = Registry::get();
+    let mut registry = binding.lock().unwrap();
+    registry.register::<Dog>("Dog");
+    registry.register::<Person>("Person");
+    registry.register::<Cat>("Cat");
+    println!("registry: {:?}", &registry);
 
-  /*
-  let test = Test {
-    one: 1,
-    two: 2,
-    three: 3,
-    beings: vec![
-      Box::new(Dog { test: 0 }),
-      Box::new(Person {}),
-      Box::new(Cat::Test1),
-    ],
-  };
+    /*
+    let test = Test {
+      one: 1,
+      two: 2,
+      three: 3,
+      beings: vec![
+        Box::new(Dog { test: 0 }),
+        Box::new(Person {}),
+        Box::new(Cat::Test1),
+      ],
+    };
 
-  println!("Hello, world! {:?}", &test);
-  println!("Hello, world! {:?}", &serde_json::to_string(&test).unwrap());
-  */
+    println!("Hello, world! {:?}", &test);
+    println!("Hello, world! {:?}", &serde_json::to_string(&test).unwrap());
+    */
+}
+*/
+pub mod dynamic;
+
+fn main() {
+    dynamic::test();
 }
