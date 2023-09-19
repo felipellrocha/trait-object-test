@@ -1,3 +1,15 @@
+#![feature(specialization,tuple_trait,coerce_unsized, unsize)]
+#![allow(
+  incomplete_features,
+  clippy::must_use_candidate,
+)]
+mod tag;
+
+fn main() {
+  tag::test();
+}
+
+/*
 pub mod registry;
 pub mod erased;
 pub mod global;
@@ -9,19 +21,19 @@ use crate::{
   factory::Resource,
 };
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 struct Dog {
   test: u32,
 }
 impl Resource for Dog {
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 struct Person {}
 impl Resource for Person {
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 enum Cat {
   Test1,
   Test2(u8),
@@ -29,7 +41,6 @@ enum Cat {
 impl Resource for Cat {
 }
 
-/*
 #[derive(Debug, Serialize)]
 struct Test {
   one: u32,
@@ -37,17 +48,17 @@ struct Test {
   three: u32,
   beings: Vec<Box<dyn Resource>>,
 }
-*/
 
 fn main() {
+  /*
   let binding = Registry::get();
   let mut registry = binding.lock().unwrap();
   registry.register::<Dog>("Dog");
   registry.register::<Person>("Person");
   registry.register::<Cat>("Cat");
   println!("registry: {:?}", &registry);
+  */
 
-  /*
   let test = Test {
     one: 1,
     two: 2,
@@ -61,5 +72,5 @@ fn main() {
 
   println!("Hello, world! {:?}", &test);
   println!("Hello, world! {:?}", &serde_json::to_string(&test).unwrap());
-  */
 }
+*/

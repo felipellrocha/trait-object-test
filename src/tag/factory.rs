@@ -1,33 +1,10 @@
 use std::marker::PhantomData;
-use serde::{Serialize, Deserialize};
 use erased_serde::serialize_trait_object;
 
 pub trait Resource: 'static + erased_serde::Serialize + Send + Sync + std::fmt::Debug {
 }
 
-impl<'erased> ::erased_serde::__private::serde::Serialize for dyn Resource + 'erased {
-  fn serialize<S>(
-    &self,
-    serializer: S,
-  ) -> ::erased_serde::__private::Result<S::Ok, S::Error>
-  where
-    S: ::erased_serde::__private::serde::Serializer,
-  {
-    fn __check_erased_serialize_supertrait<__T>()
-    where
-      __T: ?::erased_serde::__private::Sized + Resource,
-    {
-      ::erased_serde::__private::require_erased_serialize_impl::<__T>();
-    }
-    //::erased_serde::serialize(self, serializer)
-    //serializer.serialize_i32(1)
-    use serde::ser::SerializeStruct;
-    let mut state = serializer.serialize_struct("Test", 1)?;
-    state.serialize_field("value", &self)?;
-    state.end()
-  }
-}
-//serialize_trait_object!(Resource);
+serialize_trait_object!(Resource);
 /*
 impl<'erased> Serialize for dyn Resource + 'erased {
   fn serialize<S>(&self, serializer: S) -> ::erased_serde::__private::Result<S::Ok, S::Error>
