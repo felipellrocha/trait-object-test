@@ -1,35 +1,23 @@
-use std::any::Any;
 use std::marker::PhantomData;
 use erased_serde::{serialize_trait_object, Error};
+use super::tagged::Deserialize;
 
-pub trait Resource: 'static + erased_serde::Serialize + Send + Sync {
+pub trait Resource: 'static + erased_serde::Serialize + Deserialize + Send + Sync {
 }
 
 serialize_trait_object!(Resource);
-/*
-impl<'erased> Serialize for dyn Resource + 'erased {
-  fn serialize<S>(&self, serializer: S) -> ::erased_serde::__private::Result<S::Ok, S::Error>
-  where
-      S: erased_serde::__private::serde::Serializer,
-  {
-    ::erased_serde::serialize(self, serializer)
-  }
-}
-*/
 
 pub trait ErasedResource: 'static + Send + Sync {
 }
 
 impl dyn ErasedResource {
-  pub fn deserialize<T>(&self, deserializer: &mut dyn erased_serde::Deserializer) -> Result<Box<T>, Error>
+  pub fn deserialize<T>(&self, deserializer: &mut dyn erased_serde::Deserializer<'_>) -> Result<Box<T>, Error>
   where
-    T: serde::de::DeserializeOwned + 'static
+    T: Deserialize + 'static
   {
-    let ty = erased_serde::deserialize::<T>(deserializer)?;
-    Ok(Box::new(ty))
+    Ok(Box::new(erased_serde::deserialize::<T>(deserializer)?))
   }
 }
-//serialize_trait_object!(ErasedResource);
 
 
 pub struct ResourceImpl<T> {
@@ -39,7 +27,7 @@ pub struct ResourceImpl<T> {
 unsafe impl<T> Send for ResourceImpl<T> {}
 unsafe impl<T> Sync for ResourceImpl<T> {}
 
-impl<T> ResourceImpl<T> where T: serde::de::DeserializeOwned {
+impl<T> ResourceImpl<T> where T: Deserialize {
   pub fn new(_name: &'static str) -> Self {
     Self {
       _phantom: PhantomData,
@@ -50,6 +38,6 @@ impl<T> ResourceImpl<T> where T: serde::de::DeserializeOwned {
 impl<T> ErasedResource for ResourceImpl<T>
   where
     //T: std::fmt::Debug + Serialize + for<'a> Deserialize<'a> + 'static
-    T: erased_serde::Serialize + serde::de::DeserializeOwned + 'static
+    T: erased_serde::Serialize + Deserialize + 'static
 {
 }

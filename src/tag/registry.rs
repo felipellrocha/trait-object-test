@@ -13,7 +13,7 @@ lazy_static! {
   static ref COMPONENTS: Arc<Mutex<Registry>> = Arc::new(Mutex::new(Registry::new()));
 }
 
-pub type DeserializeFn<T> = fn(&mut dyn erased_serde::Deserializer) -> erased_serde::Result<Box<T>>;
+pub type DeserializeFn<T> = fn(&mut dyn erased_serde::Deserializer<'_>) -> erased_serde::Result<Box<T>>;
 
 #[derive(Default)]
 pub struct Registry {

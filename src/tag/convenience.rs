@@ -146,12 +146,12 @@ impl<T: error::Error> error::Error for Box<T> {
 	}
 }
 impl<T: fmt::Debug + ?Sized> fmt::Debug for Box<T> {
-	fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
 		self.0.fmt(f)
 	}
 }
 impl<T: fmt::Display + ?Sized> fmt::Display for Box<T> {
-	fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
 		self.0.fmt(f)
 	}
 }

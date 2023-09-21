@@ -3,7 +3,7 @@
 use std::marker::PhantomData;
 use crate::tag::{
   factory::ErasedResource,
-  registry::{DeserializeFn, Registry},
+  registry::Registry,
 };
 
 
@@ -138,7 +138,7 @@ pub(crate) mod deserialize {
   pub trait Sealed {
     fn deserialize_erased(
       self: *const Self,
-      deserializer: &mut dyn erased_serde::Deserializer,
+      deserializer: &mut dyn erased_serde::Deserializer<'_>,
     ) -> Result<NonNull<()>, erased_serde::Error> {
       let _ = deserializer;
       unreachable!()
@@ -163,7 +163,7 @@ pub(crate) mod deserialize {
     #[inline]
     fn deserialize_erased(
       self: *const Self,
-      deserializer: &mut dyn erased_serde::Deserializer,
+      deserializer: &mut dyn erased_serde::Deserializer<'_>,
     ) -> Result<NonNull<()>, erased_serde::Error> {
       erased_serde::deserialize::<Self>(deserializer)
         .map(|item| NonNull::new(Box::into_raw(Box::new(item)).cast()).unwrap())
@@ -189,7 +189,7 @@ pub(crate) mod deserialize {
   #[inline]
   pub fn deserialize_erased<T: ?Sized>(
     self_: *const T,
-    deserializer: &mut dyn erased_serde::Deserializer,
+    deserializer: &mut dyn erased_serde::Deserializer<'_>,
   ) -> Result<Box<T>, erased_serde::Error>
   where
     T: Sealed,
@@ -251,11 +251,10 @@ impl<T: Deserialize + ?Sized + 'static> DeserializerTrait<T> for Deserializer<T>
 }
 
 struct TaggedVisitor<T: Deserialize + ?Sized>(PhantomData<T>);
-
-impl<'de, T: Deserialize + serde::de::DeserializeOwned + ?Sized + 'static> serde::de::Visitor<'de> for TaggedVisitor<T> {
+impl<'de, T: Deserialize + ?Sized + 'static> serde::de::Visitor<'de> for TaggedVisitor<T> {
   type Value = Box<T>;
 
-  fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+  fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     write!(formatter, "a \"{}\" trait object", std::any::type_name::<T>())
   }
 
@@ -278,17 +277,12 @@ impl<'de, T: Deserialize + serde::de::DeserializeOwned + ?Sized + 'static> serde
       Some(deserializer) => Ok(deserializer),
       None => Err(serde::de::Error::unknown_variant(key, &[])),
     }?;
-    //let ptr = &mut registration as *mut T;
+
     //println!("what is this? {:?}", registration);
 
-    let des = DeserializeErased::<T>(registration, PhantomData);
+    //let des = DeserializeErased::<T>(registration, PhantomData);
 
-    /*
-    let ty: Box<T> = match map.next_value_seed(DeserializeErased(registration))? {
-      Some(value) => Ok(value),
-      None => Err(serde::de::Error::custom(format!("Could deserialize this type: {:}", &key))),
-    }?; 
-    */
+    let ty: Box<T> = map.next_value_seed(DeserializeErased(registration, PhantomData))?; 
 
     //println!("ty {:?}", &ty);
     /*
@@ -306,15 +300,15 @@ impl<'de, T: Deserialize + serde::de::DeserializeOwned + ?Sized + 'static> serde
   }
 }
 
-struct DeserializeErased<'a, T: Deserialize + serde::de::DeserializeOwned + ?Sized>(&'a dyn ErasedResource, PhantomData<T>);
-impl<'de, T: 'static + Deserialize + ?Sized + for<'a> serde::de::Deserialize<'a>> serde::de::DeserializeSeed<'de> for DeserializeErased<'de, T> {
+struct DeserializeErased<'a, T: Deserialize + ?Sized>(&'a dyn ErasedResource, PhantomData<T>);
+impl<'de, T: 'static + Deserialize + ?Sized> serde::de::DeserializeSeed<'de> for DeserializeErased<'de, T> {
   type Value = Box<T>;
 
   #[inline]
   fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
     where D: serde::de::Deserializer<'de>,
   {
-    let mut erased = <dyn erased_serde::Deserializer>::erase(deserializer);
+    let mut erased = <dyn erased_serde::Deserializer<'_>>::erase(deserializer);
     self.0.deserialize(&mut erased).map_err(serde::de::Error::custom)
     //(self.0)(&mut erased).map_err(serde::de::Error::custom)
   }
