@@ -25,18 +25,15 @@ pub trait ErasedResource: 'static + std::fmt::Debug + Send + Sync {
 pub struct ResourceImpl<T>
   where T: std::fmt::Debug,
 {
-  #[allow(unused)]
-  name: &'static str,
   _phantom: PhantomData<*const T>,
 }
 
 unsafe impl<T> Send for ResourceImpl<T> where T: std::fmt::Debug {}
 unsafe impl<T> Sync for ResourceImpl<T> where T: std::fmt::Debug {}
 
-impl<T> ResourceImpl<T> where T: std::fmt::Debug {
-  pub fn new(name: &'static str) -> Self {
+impl<T> ResourceImpl<T> where T: std::fmt::Debug + serde::de::DeserializeOwned {
+  pub fn new(_name: &'static str) -> Self {
     Self {
-      name,
       _phantom: PhantomData,
     }
   }
@@ -45,6 +42,6 @@ impl<T> ResourceImpl<T> where T: std::fmt::Debug {
 impl<T> ErasedResource for ResourceImpl<T>
   where
     //T: std::fmt::Debug + Serialize + for<'a> Deserialize<'a> + 'static
-    T: std::fmt::Debug + erased_serde::Serialize + 'static
+    T: std::fmt::Debug + erased_serde::Serialize + serde::de::DeserializeOwned + 'static
 {
 }

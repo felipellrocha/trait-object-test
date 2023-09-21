@@ -10,8 +10,7 @@ use std::{
   ops::{self, Deref, DerefMut},
 };
 
-//use super::tagged::{deserialize, serialize, Deserialize, Serialize};
-use super::tagged::{serialize, Serialize};
+use super::tagged::{deserialize, serialize, Deserialize, Serialize};
 
 /// Convenience wrapper around [std::boxed::Box<T>](std::boxed::Box) that automatically uses `serde_traitobject` for (de)serialization.
 #[derive(Clone, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -164,7 +163,7 @@ impl<T: Serialize + ?Sized + 'static> serde::ser::Serialize for Box<T> {
 		serialize(&self.0, serializer)
 	}
 }
-/*
+
 impl<'de, T: Deserialize + ?Sized + 'static> serde::de::Deserialize<'de> for Box<T> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
@@ -173,7 +172,6 @@ impl<'de, T: Deserialize + ?Sized + 'static> serde::de::Deserialize<'de> for Box
 		deserialize(deserializer).map(Self)
 	}
 }
-*/
 
 /// A convenience trait implemented on all (de)serializable implementors of [`std::any::Any`].
 ///
@@ -197,7 +195,7 @@ impl<'de, T: Deserialize + ?Sized + 'static> serde::de::Deserialize<'de> for Box
 /// # assert_eq!(format!("{}!", downcast), "hi there!");
 /// // hi there!
 /// ```
-pub trait Any: any::Any + Serialize {
+pub trait Any: any::Any + Serialize + Deserialize {
 	/// Convert to a `&std::any::Any`.
 	fn as_any(&self) -> &dyn any::Any;
 	/// Convert to a `&mut std::any::Any`.
@@ -207,7 +205,7 @@ pub trait Any: any::Any + Serialize {
 }
 impl<T> Any for T
 where
-	T: any::Any + Serialize,
+	T: any::Any + Serialize + Deserialize,
 {
 	fn as_any(&self) -> &dyn any::Any {
 		self
@@ -239,7 +237,7 @@ impl serde::ser::Serialize for dyn Any {
 		serialize(self, serializer)
 	}
 }
-/*
+
 impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Any + 'static> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
@@ -248,7 +246,7 @@ impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Any + 'static> {
 		<Box<dyn Any + 'static>>::deserialize(deserializer).map(|x| x.0)
 	}
 }
-*/
+
 impl serde::ser::Serialize for dyn Any + Send {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
@@ -257,7 +255,7 @@ impl serde::ser::Serialize for dyn Any + Send {
 		serialize(self, serializer)
 	}
 }
-/*
+
 impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Any + Send + 'static> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
@@ -266,7 +264,6 @@ impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Any + Send + 'static> {
 		<Box<dyn Any + Send + 'static>>::deserialize(deserializer).map(|x| x.0)
 	}
 }
-*/
 
 /// A convenience trait implemented on all (de)serializable implementors of [`std::error::Error`].
 ///
@@ -301,8 +298,8 @@ impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Any + Send + 'static> {
 /// # assert_eq!(format!("{:?}", deserialized), "Err(MyError(\"boxed error\"))");
 /// // Err(MyError("boxed error"))
 /// ```
-pub trait Error: error::Error + Serialize {}
-impl<T: ?Sized> Error for T where T: error::Error + Serialize {}
+pub trait Error: error::Error + Serialize + Deserialize {}
+impl<T: ?Sized> Error for T where T: error::Error + Serialize + Deserialize {}
 
 impl<'a> AsRef<Self> for dyn Error + 'a {
 	fn as_ref(&self) -> &Self {
@@ -315,12 +312,12 @@ impl<'a> AsRef<Self> for dyn Error + Send + 'a {
 	}
 }
 
-impl<'a, E: error::Error + Serialize + 'a> From<E> for Box<dyn Error + 'a> {
+impl<'a, E: error::Error + Serialize + Deserialize + 'a> From<E> for Box<dyn Error + 'a> {
 	fn from(err: E) -> Self {
 		Box::new(err)
 	}
 }
-impl<'a, E: error::Error + Serialize + 'a> From<E> for boxed::Box<dyn Error + 'a> {
+impl<'a, E: error::Error + Serialize + Deserialize + 'a> From<E> for boxed::Box<dyn Error + 'a> {
 	fn from(err: E) -> Self {
 		boxed::Box::new(err)
 	}
@@ -334,7 +331,7 @@ impl serde::ser::Serialize for dyn Error {
 		serialize(self, serializer)
 	}
 }
-/*
+
 impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Error + 'static> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
@@ -343,7 +340,7 @@ impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Error + 'static> {
 		<Box<dyn Error + 'static>>::deserialize(deserializer).map(|x| x.0)
 	}
 }
-*/
+
 impl serde::ser::Serialize for dyn Error + Send {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
@@ -352,7 +349,7 @@ impl serde::ser::Serialize for dyn Error + Send {
 		serialize(self, serializer)
 	}
 }
-/*
+
 impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Error + Send + 'static> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
@@ -361,7 +358,6 @@ impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Error + Send + 'static>
 		<Box<dyn Error + Send + 'static>>::deserialize(deserializer).map(|x| x.0)
 	}
 }
-*/
 
 /// A convenience trait implemented on all (de)serializable implementors of [`std::fmt::Display`].
 ///
@@ -385,8 +381,8 @@ impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Error + Send + 'static>
 /// # assert_eq!(format!("{}", deserialized), "boxed displayable");
 /// // boxed displayable
 /// ```
-pub trait Display: fmt::Display + Serialize {}
-impl<T: ?Sized> Display for T where T: fmt::Display + Serialize {}
+pub trait Display: fmt::Display + Serialize + Deserialize {}
+impl<T: ?Sized> Display for T where T: fmt::Display + Serialize + Deserialize {}
 
 impl<'a> AsRef<Self> for dyn Display + 'a {
 	fn as_ref(&self) -> &Self {
@@ -407,7 +403,7 @@ impl serde::ser::Serialize for dyn Display {
 		serialize(self, serializer)
 	}
 }
-/*
+
 impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Display + 'static> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
@@ -416,7 +412,7 @@ impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Display + 'static> {
 		<Box<dyn Display + 'static>>::deserialize(deserializer).map(|x| x.0)
 	}
 }
-*/
+
 impl serde::ser::Serialize for dyn Display + Send {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
@@ -425,7 +421,7 @@ impl serde::ser::Serialize for dyn Display + Send {
 		serialize(self, serializer)
 	}
 }
-/*
+
 impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Display + Send + 'static> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
@@ -434,7 +430,6 @@ impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Display + Send + 'stati
 		<Box<dyn Display + Send + 'static>>::deserialize(deserializer).map(|x| x.0)
 	}
 }
-*/
 
 /// A convenience trait implemented on all (de)serializable implementors of [`std::fmt::Debug`].
 ///
@@ -458,8 +453,8 @@ impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Display + Send + 'stati
 /// # assert_eq!(format!("{:?}", deserialized), "\"boxed debuggable\"");
 /// // "boxed debuggable"
 /// ```
-pub trait Debug: fmt::Debug + Serialize {}
-impl<T: ?Sized> Debug for T where T: fmt::Debug + Serialize {}
+pub trait Debug: fmt::Debug + Serialize + Deserialize {}
+impl<T: ?Sized> Debug for T where T: fmt::Debug + Serialize + Deserialize {}
 
 impl<'a> AsRef<Self> for dyn Debug + 'a {
 	fn as_ref(&self) -> &Self {
@@ -480,7 +475,7 @@ impl serde::ser::Serialize for dyn Debug {
 		serialize(self, serializer)
 	}
 }
-/*
+
 impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Debug + 'static> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
@@ -489,7 +484,7 @@ impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Debug + 'static> {
 		<Box<dyn Debug + 'static>>::deserialize(deserializer).map(|x| x.0)
 	}
 }
-*/
+
 impl serde::ser::Serialize for dyn Debug + Send {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
@@ -498,7 +493,7 @@ impl serde::ser::Serialize for dyn Debug + Send {
 		serialize(self, serializer)
 	}
 }
-/*
+
 impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Debug + Send + 'static> {
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 	where
@@ -507,4 +502,3 @@ impl<'de> serde::de::Deserialize<'de> for boxed::Box<dyn Debug + Send + 'static>
 		<Box<dyn Debug + Send + 'static>>::deserialize(deserializer).map(|x| x.0)
 	}
 }
-*/

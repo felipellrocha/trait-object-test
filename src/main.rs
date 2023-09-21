@@ -1,4 +1,4 @@
-#![feature(specialization,tuple_trait,coerce_unsized, unsize)]
+#![feature(arbitrary_self_types, specialization,tuple_trait,coerce_unsized, unsize)]
 #![allow(
   incomplete_features,
   clippy::must_use_candidate,
