@@ -833,9 +833,7 @@ mod typetagger {
                             >(deserializer)?,
                         ),
                     ))
-                        as typetag::__private::DeserializeFn<
-                            <dyn Resource as typetag::__private::Strictest>::Object,
-                        >,
+                        as typetag::__private::DeserializeFn<Box<Strictest::Object>>,
                 )
             },
             next: ::inventory::core::cell::UnsafeCell::new(

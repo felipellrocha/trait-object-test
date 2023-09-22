@@ -10,6 +10,7 @@ serialize_trait_object!(Resource);
 pub trait ErasedResource: 'static + Send + Sync {
 }
 
+/*
 impl dyn ErasedResource {
   pub fn deserialize<T>(&self, deserializer: &mut dyn erased_serde::Deserializer<'_>) -> Result<Box<T>, Error>
   where
@@ -18,7 +19,7 @@ impl dyn ErasedResource {
     Ok(Box::new(erased_serde::deserialize::<T>(deserializer)?))
   }
 }
-
+*/
 
 pub struct ResourceImpl<T> {
   _phantom: PhantomData<*const T>,
